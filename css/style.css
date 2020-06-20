@@ -1,22 +1,52 @@
 @charset "UTF-8";
 /*"Ovo", "Georgia", "STZhongsong", DFKai-SB", "Microsoft YaHei", serif;*/
 body {
-  background-color: #f7f7f7; }
+  background-color: #efefef; }
+
+.navbar-brand {
+  min-height: 4.25rem; }
+
+.navbar-burger {
+  min-height: 4.25rem; }
+
+.navbar-item {
+  font-size: 20px; }
+
+.section_block {
+  background-color: #efefef;
+  display: flex;
+  justify-content: center;
+  margin: 0px 20px; }
+
+.index_container {
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  border-radius: 15px;
+  padding: 50px 60px;
+  margin: 70px auto 0px; }
+
+.article .article-title a {
+  font-size: 30px; }
+
+.article .article-meta a {
+  font-size: 18px; }
 
 .archive {
   background-color: #ffffff;
   padding: 30px;
-  border-radius: 10px; }
+  border-radius: 15px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); }
 
 .navbar is-transparent is-fixed-top navbar-main {
   position: left; }
 
-.tag:not(body).is-light {
-  background-color: #ffffff;
-  border-radius: 10px; }
-
 .navbar-dropdown is-left {
   left: 100%; }
+
+.tag:not(body).is-light {
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); }
 
 body, button, input, select, textarea {
   font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; }
@@ -29,6 +59,9 @@ a.tag.article-tag {
   .container {
     max-width: 800px;
     width: 800px; }
+  .index_container {
+    max-width: 80%;
+    width: 80%; }
   .navbar.is-transparent .navbar-dropdown a.navbar-item:hover {
     color: #3273dc; } }
 
@@ -83,7 +116,7 @@ a.tag.article-tag {
     word-break: break-word; }
 
 .article .article-more-link a {
-  font-size: .9rem;
+  font-size: 1.2rem;
   color: darkgray;
   border-bottom: 1px dotted transparent; }
   .article .article-more-link a:hover {
