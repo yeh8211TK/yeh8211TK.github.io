@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>簡易 AWS 服務使用指南(1) - IAM、S3 - Scitraveler</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="&amp;#x524D;&amp;#x8A00;Amazon Web Services (AWS) &amp;#x4F5C;&amp;#x70BA;&amp;#x96F2;&amp;#x7AEF;&amp;#x670D;&amp;#x52D9;&amp;#x61C9;&amp;#x7528;&amp;#x7684;&amp;#x5E73;&amp;#x53F0;&amp;#xFF0C;&amp;#x9664;&amp;#x4E86;&amp;#x63D0;&amp;#x4F9B;&amp;#x6211;&amp;#x5011;&amp;#x8CC7;&amp;#x659">
+<meta property="og:type" content="article">
+<meta property="og:title" content="簡易 AWS 服務使用指南(1) - IAM、S3">
+<meta property="og:url" content="https://yeh8211tk.github.io/2020/06/30/AWS/index.html">
+<meta property="og:site_name" content="Scitraveler">
+<meta property="og:description" content="&amp;#x524D;&amp;#x8A00;Amazon Web Services (AWS) &amp;#x4F5C;&amp;#x70BA;&amp;#x96F2;&amp;#x7AEF;&amp;#x670D;&amp;#x52D9;&amp;#x61C9;&amp;#x7528;&amp;#x7684;&amp;#x5E73;&amp;#x53F0;&amp;#xFF0C;&amp;#x9664;&amp;#x4E86;&amp;#x63D0;&amp;#x4F9B;&amp;#x6211;&amp;#x5011;&amp;#x8CC7;&amp;#x659">
+<meta property="og:locale" content="zh_TW">
+<meta property="article:published_time" content="2020-06-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-07-02T13:33:19.271Z">
+<meta property="article:author" content="C.J. Yeh">
+<meta property="article:tag" content="data engineering">
+<meta property="article:tag" content="cloud technology">
+<meta property="article:tag" content="Amazon S3">
+<meta name="twitter:card" content="summary">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-170106687-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-170106687-1');
+</script>
+
+
+    
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation"  aria-label="main navigation">
+
+    
+    <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+        <a class="navbar-item" title="目錄">
+            <i class="fa fa-list"></i>
+        </a>
+        <div class="navbar-dropdown is-left">
+            
+            
+                
+                
+                <a class="navbar-item" href="#前言">1&nbsp;&nbsp;<b>前言</b></a>
+            
+                
+                    <hr class="navbar-divider">
+                
+                
+                <a class="navbar-item" href="#使用-Boto3-套件連結-AWS">2&nbsp;&nbsp;<b>使用 Boto3 套件連結 AWS</b></a>
+            
+                
+                    <hr class="navbar-divider">
+                
+                
+                <a class="navbar-item" href="#用-S3-進行檔案處理">3&nbsp;&nbsp;<b>用 S3 進行檔案處理</b></a>
+            
+                
+                    <hr class="navbar-divider">
+                
+                
+                <a class="navbar-item" href="#檔案的權限設定">4&nbsp;&nbsp;<b>檔案的權限設定</b></a>
+            
+                
+                    <hr class="navbar-divider">
+                
+                
+                <a class="navbar-item" href="#小結">5&nbsp;&nbsp;<b>小結</b></a>
+            
+        </div>
+    </div>
+    
+
+    <div class="container">
+
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Scitech
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">文檔</a>
+            
+            <a class="navbar-item "
+               href="/categories">分類</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜尋" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+
+            
+
+            <!--
+            
+            -->
+        </div>
+        
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="index_container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            簡易 AWS 服務使用指南(1) - IAM、S3
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <!--<time datetime="2020-06-29T16:00:00.000Z" itemprop="datePublished">2020年6月30日</time>-->
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Data-engineering/">Data engineering</a>
+        </span>
+        
+        <!--
+        <span class="column is-narrow">
+            
+            
+            22 分钟 讀完 (約 3343 字)
+        </span>
+        -->
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><h4 id="&#x524D;&#x8A00;"><a href="#&#x524D;&#x8A00;" class="headerlink" title="&#x524D;&#x8A00;"></a><strong>&#x524D;&#x8A00;</strong></h4><p>Amazon Web Services (AWS) &#x4F5C;&#x70BA;&#x96F2;&#x7AEF;&#x670D;&#x52D9;&#x61C9;&#x7528;&#x7684;&#x5E73;&#x53F0;&#xFF0C;&#x9664;&#x4E86;&#x63D0;&#x4F9B;&#x6211;&#x5011;&#x8CC7;&#x6599;&#x5132;&#x5B58;&#x3001;&#x904B;&#x7B97;&#x7684;&#x529F;&#x80FD;&#x5916;&#xFF0C;&#x4E5F;&#x6709;&#x5176;&#x4ED6;&#x5404;&#x5F0F;&#x5404;&#x6A23;&#x7684;&#x61C9;&#x7528;&#x8B93;&#x6211;&#x5011;&#x4F86;&#x4F7F;&#x7528;&#xFF0C;&#x4F8B;&#x5982;: &#x751F;&#x6210;&#x975C;&#x614B;&#x7DB2;&#x9801;&#x3001;&#x767C;&#x9001;&#x8A0A;&#x606F;&#x548C;&#x81EA;&#x52D5;&#x5316;&#x7A0B;&#x5F0F;&#x7B49;&#x3002;&#x6B64;&#x5916;&#xFF0C;&#x4EBA;&#x5DE5;&#x667A;&#x6167;&#x7684;&#x76F8;&#x95DC;&#x670D;&#x52D9;: &#x5F71;&#x50CF;&#x8FA8;&#x8B58;&#x3001;&#x8A9E;&#x610F;&#x5206;&#x6790;&#x3001;&#x6587;&#x5B57;&#x7FFB;&#x8B6F;&#xFF0C;&#x53EF;&#x4EE5;&#x8B93;&#x7121;&#x7D93;&#x9A57;&#x7684;&#x4F7F;&#x7528;&#x8005;&#x5011;&#x5FEB;&#x901F;&#x4E0A;&#x624B;&#x800C;&#x7121;&#x9700;&#x5177;&#x5099;&#x6A5F;&#x68B0;&#x5B78;&#x7FD2;&#x76F8;&#x95DC;&#x7684;&#x5C08;&#x696D;&#x77E5;&#x8B58;&#x3002;&#x4EE5;&#x4E0A;&#x9019;&#x4E9B;&#x670D;&#x52D9;&#x4E0D;&#x50C5;&#x662F;&#x80FD;&#x5404;&#x81EA;&#x55AE;&#x7368;&#x4F7F;&#x7528;&#xFF0C;&#x4E5F;&#x80FD;&#x4E92;&#x76F8;&#x642D;&#x914D;&#x4F86;&#x61C9;&#x4ED8;&#x8907;&#x96DC;&#x7684;&#x9700;&#x6C42;&#xFF0C;&#x9032;&#x800C;&#x5EFA;&#x7ACB;&#x8D77;&#x4E00;&#x500B;&#x6709;&#x5F48;&#x6027;&#x4E14;&#x9748;&#x6D3B;&#x7684;&#x529F;&#x80FD;&#x6A21;&#x7D44;&#x3002;</p>
+<p>&#x4EE5;&#x4E0B;&#x7CFB;&#x5217;&#x6587;&#x5C07;&#x900F;&#x904E; Python <code>Boto3</code> &#x5957;&#x4EF6;&#x9023;&#x7D50; AWS&#xFF0C;&#x4E26;&#x904B;&#x7528; IAM&#x3001;S3&#x3001;SNS&#x3001;Comprehend &#x8207; Rekognition &#x7684;&#x96F2;&#x7AEF;&#x670D;&#x52D9;&#x9032;&#x884C;&#x4F7F;&#x7528;&#x8005;&#x7BA1;&#x7406;&#x3001;&#x6A94;&#x6848;&#x64CD;&#x4F5C;&#x3001;&#x8A0A;&#x606F;&#x5BC4;&#x9001;&#x3001;&#x5F71;&#x50CF;&#x5075;&#x6E2C;&#x548C;&#x81EA;&#x7136;&#x8A9E;&#x8A00;&#x8655;&#x7406;&#x7B49;&#x4EFB;&#x52D9;&#x3002;<br>&#xA0;</p>
+<a id="more"></a>
+
+<h4 id="&#x4F7F;&#x7528;-Boto3-&#x5957;&#x4EF6;&#x9023;&#x7D50;-AWS"><a href="#&#x4F7F;&#x7528;-Boto3-&#x5957;&#x4EF6;&#x9023;&#x7D50;-AWS" class="headerlink" title="&#x4F7F;&#x7528; Boto3 &#x5957;&#x4EF6;&#x9023;&#x7D50; AWS"></a><strong>&#x4F7F;&#x7528; Boto3 &#x5957;&#x4EF6;&#x9023;&#x7D50; AWS</strong></h4><p><code>Boto3</code> &#x662F; Python &#x7684;&#x5957;&#x4EF6;&#x4E4B;&#x4E00;&#xFF0C;&#x6211;&#x5011;&#x53EF;&#x4EE5;&#x7528;&#x5B83;&#x521D;&#x59CB;&#x5316; <code>client</code> &#x7AEF;&#xFF0C;&#x53EA;&#x8981;&#x8F38;&#x5165;&#x4F7F;&#x7528;&#x7684;&#x670D;&#x52D9;&#x540D;&#x7A31;&#x3001;<code>region_name</code>&#x3001;<code>aws_access_key_id</code> &#x548C; <code>aws_secret_access_key</code> &#x4FBF;&#x53EF;&#x9023;&#x7D50;&#x4E0A; AWS&#x3002;</p>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">import boto3</span><br><span class="line">s3 = boto3.client(&apos;s3&apos;,</span><br><span class="line">&#xA0;                 region_name=&apos;us-east-1&apos;,</span><br><span class="line">&#xA0;                 aws_access_key_id=AWS_KEY_ID,</span><br><span class="line">&#xA0;                 aws_secret_access_key=AWS_SECRET)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x4EE5;&#x4E0A;&#x7684;&#x7BC4;&#x4F8B;&#x4E2D;&#xFF0C;&#x4F7F;&#x7528;&#x7684;&#x670D;&#x52D9; Simple Storage Service (S3) &#x4EE3;&#x8868;&#x7269;&#x4EF6;&#x5132;&#x5B58;&#x670D;&#x52D9;&#xFF0C;&#x7528;&#x4F86;&#x5B58;&#x653E;&#x5404;&#x7A2E;&#x8CC7;&#x6599;&#x3002; <code>region_name</code> &#x70BA; AWS &#x7684;&#x670D;&#x52D9;&#x7AEF;&#x9EDE;&#x540D;&#x7A31;&#xFF0C;&#x5404;&#x500B;&#x5340;&#x57DF;&#x7684;&#x540D;&#x7A31;&#x6709;&#x76F8;&#x5C0D;&#x61C9;&#x7684;&#x4EE3;&#x78BC;&#xFF0C;&#x4F8B;&#x5982;&#x4EE3;&#x78BC; us-east-1 &#x4EE3;&#x8868;&#x7F8E;&#x570B;&#x6771;&#x90E8;(&#x7DAD;&#x5409;&#x5C3C;&#x4E9E;&#x5317;&#x90E8;)&#x3002;&#x8A73;&#x7D30;&#x7684;&#x5C0D;&#x61C9;&#x8868;&#x53EF;&#x67E5;&#x8A62;<a href="https://docs.aws.amazon.com/zh_tw/general/latest/gr/rande.html#regional-endpoints" target="_blank" rel="noopener">&#x9019;&#x88E1;</a>&#x3002;&#x800C; AWS_KEY_ID &#x8207; AWS_SECRET &#x70BA; AWS &#x5B58;&#x53D6;&#x91D1;&#x9470;&#x7684; ID &#x548C;&#x5BC6;&#x78BC;&#xFF0C;&#x4F7F;&#x7528;&#x8005;&#x5FC5;&#x9808;&#x64C1;&#x6709;&#x9019;&#x4E00;&#x7D44;&#x8CC7;&#x8A0A;&#x624D;&#x80FD;&#x4EAB;&#x7528; AWS &#x670D;&#x52D9;&#x548C;&#x8CC7;&#x6E90;&#x7684;&#x5B58;&#x53D6;&#x6B0A;&#x3002;</p>
+<p>&#x5728;&#x8AAA;&#x660E;&#x5982;&#x4F55;&#x4F7F;&#x7528; S3 &#x670D;&#x52D9;&#x524D;&#xFF0C;&#x6211;&#x5011;&#x5148;&#x4F86;&#x770B;&#x770B;&#x600E;&#x9EBC;&#x5728; AWS &#x7BA1;&#x7406;&#x4F7F;&#x7528;&#x8005;&#x4EE5;&#x53CA;&#x767C;&#x914D;&#x7D66;&#x4F7F;&#x7528;&#x8005;&#x4E00;&#x7D44; <code>aws_access_key_id</code> &#x8207; <code>aws_secret_access_key</code>&#x3002;</p>
+<p>&#x9996;&#x5148;&#xFF0C;&#x8A3B;&#x518A; <a href="https://aws.amazon.com/tw/" target="_blank" rel="noopener">AWS</a> &#x4E26;&#x767B;&#x5165; AWS Management Console &#x7684;&#x9801;&#x9762;&#x3002;&#x6211;&#x5011;&#x9700;&#x8981;&#x4F7F;&#x7528; IAM &#x670D;&#x52D9;&#x4F86;&#x7BA1;&#x7406;&#x4F7F;&#x7528;&#x8005;&#x3002;IAM &#x5168;&#x540D;&#x70BA; AWS Identity and Access Management&#xFF0C;&#x4E3B;&#x8981;&#x662F;&#x7528;&#x4F86;&#x5EFA;&#x7ACB;&#x3001;&#x7BA1;&#x7406; AWS &#x7684;&#x4F7F;&#x7528;&#x8005;&#x548C;&#x8CE6;&#x4E88;&#x4F7F;&#x7528;&#x8005;&#x5B58;&#x53D6;&#x8CC7;&#x6E90;&#x7684;&#x6B0A;&#x9650;&#x3002;&#x5728;&#x4E3B;&#x63A7;&#x53F0;&#x6703;&#x6709;&#x4E00;&#x500B; Find Services &#x7684;&#x641C;&#x5C0B;&#x6846;&#xFF0C;&#x88E1;&#x9762;&#x8F38;&#x5165; IAM &#x4F86;&#x5EFA;&#x7ACB;&#x4F7F;&#x7528;&#x8005;&#x3002;&#x6D41;&#x7A0B;&#x5982;&#x4E0B;: </p>
+<ul>
+<li><p>&#x5728; Users &#x9801;&#x9762;&#x9EDE;&#x64CA; Add user</p>
+</li>
+<li><p>&#x8F38;&#x5165;&#x4F7F;&#x7528;&#x8005;&#x540D;&#x7A31;: User name</p>
+</li>
+<li><p>&#x9078;&#x64C7; AWS &#x7684;&#x5B58;&#x53D6;&#x578B;&#x614B;: Programmatic access &#x8CE6;&#x4E88;&#x4F7F;&#x7528;&#x8005;&#x4E00;&#x7D44; access_key_id &#x548C; secret_access_key&#xFF0C;&#x4F7F;&#x7528;&#x8005;&#x5FC5;&#x9808;&#x4F7F;&#x7528;&#x5B83;&#x624D;&#x53EF;&#x4EE5;&#x5B58;&#x53D6; AWS &#x8CC7;&#x6E90;; AWS Management Console access &#x5247;&#x662F;&#x8B93;&#x6240;&#x6709;&#x4F7F;&#x7528;&#x8005;&#x7528;&#x4E00;&#x500B;&#x5BC6;&#x78BC;&#x767B;&#x5165;&#x4E3B;&#x63A7;&#x53F0;&#xFF0C;&#x76F8;&#x8F03;&#x65BC;&#x524D;&#x8005;&#x6709;&#x6BD4;&#x8F03;&#x5927;&#x7684;&#x6B0A;&#x9650;&#x3002;&#x76EE;&#x524D;&#x5148;&#x52FE;&#x9078;&#x524D;&#x8005;&#x3002;</p>
+</li>
+<li><p>&#x8A2D;&#x5B9A; Permission: &#x9078;&#x64C7; Attach existing policies directly &#x4E26;&#x8F38;&#x5165;&#x7279;&#x5B9A;&#x670D;&#x52D9;&#x7684; Policy&#x3002;&#x4F8B;&#x5982;&#x6211;&#x5011;&#x8981;&#x8B93;&#x4F7F;&#x7528;&#x8005;&#x6709; S3 &#x670D;&#x52D9;&#x7684;&#x5B58;&#x53D6;&#x6B0A;&#xFF0C;&#x53EF;&#x8F38;&#x5165; AmazonS3FullAccess&#x3002;</p>
+</li>
+</ul>
+<p>&#x5B8C;&#x6210;&#x4E4B;&#x5F8C;&#xFF0C;&#x4F7F;&#x7528;&#x8005;&#x4FBF;&#x6703;&#x6709;&#x4E00;&#x7D44; access_key_id &#x548C; secret_access_key&#x3002;</p>
+<p>&#xA0;</p>
+<h4 id="&#x7528;-S3-&#x9032;&#x884C;&#x6A94;&#x6848;&#x8655;&#x7406;"><a href="#&#x7528;-S3-&#x9032;&#x884C;&#x6A94;&#x6848;&#x8655;&#x7406;" class="headerlink" title="&#x7528; S3 &#x9032;&#x884C;&#x6A94;&#x6848;&#x8655;&#x7406;"></a><strong>&#x7528; S3 &#x9032;&#x884C;&#x6A94;&#x6848;&#x8655;&#x7406;</strong></h4><p>&#x6709;&#x4E86;&#x4E0A;&#x8FF0;&#x7684;&#x8A2D;&#x5B9A;&#x5F8C;&#xFF0C;&#x73FE;&#x5728;&#x5C07;&#x8A71;&#x984C;&#x8F49;&#x56DE;&#x5230; S3&#x3002;S3 &#x4F5C;&#x70BA;&#x96F2;&#x7AEF;&#x5132;&#x5B58;&#x7684;&#x670D;&#x52D9;&#xFF0C;&#x6211;&#x5011;&#x53EF;&#x4EE5;&#x4E0A;&#x50B3;&#x4EFB;&#x4F55;&#x7684;&#x6A94;&#x6848;&#x5230; S3&#xFF0C;&#x4E26;&#x4E14;&#x85C9;&#x8457; URL &#x5C07;&#x6A94;&#x6848;&#x4E0B;&#x8F09;&#x5230;&#x672C;&#x5730;&#x7AEF;&#x3002;&#x5F9E;&#x8CC7;&#x6599;&#x6D41;&#x7684;&#x89C0;&#x9EDE;&#x4E0A;&#x4F86;&#x770B;&#xFF0C;&#x96F2;&#x7AEF;&#x5132;&#x5B58;&#x626E;&#x6F14;&#x4E00;&#x500B;&#x91CD;&#x8981;&#x7684;&#x89D2;&#x8272;&#x3002;&#x7121;&#x8AD6;&#x662F;&#x5728;&#x8CC7;&#x6599;&#x7BA1;&#x7DDA;(data pipeline)&#x7684;&#x7D50;&#x9EDE;&#x6216;&#x7AEF;&#x9EDE;&#xFF0C;&#x5B83;&#x53EF;&#x7576;&#x4F5C;&#x8CC7;&#x6599;&#x66AB;&#x6642;&#x5B58;&#x653E;&#x7684;&#x5730;&#x65B9;&#x3002; &#x4EE5; S3 &#x70BA;&#x4F8B;&#xFF0C;&#x8A31;&#x591A;&#x7684; AWS &#x670D;&#x52D9;&#x4FBF;&#x662F;&#x7528;&#x653E;&#x5728; S3 &#x7684;&#x8CC7;&#x6599;&#x505A;&#x5F8C;&#x7E8C;&#x7684;&#x8655;&#x7406;&#x4EE5;&#x53CA;&#x61C9;&#x7528;&#x3002;</p>
+<p>S3 &#x7684;&#x7D44;&#x6210;&#x8981;&#x7D20;&#x4E2D;&#x4E3B;&#x8981;&#x6709;&#x5169;&#x9805;&#x6771;&#x897F;: <strong>Bucket</strong> &#x548C; <strong>Object</strong>&#x3002;&#x7528;&#x8CC7;&#x6599;&#x593E;&#x8207;&#x6A94;&#x6848;&#x7684;&#x95DC;&#x4FC2;&#x4F86;&#x6BD4;&#x55BB;&#x7684;&#x8A71;&#xFF0C;<strong>Bucket</strong> &#x985E;&#x4F3C;&#x8CC7;&#x6599;&#x593E;&#x7684;&#x529F;&#x80FD;&#xFF0C;&#x7528;&#x4F86;&#x5B58;&#x653E;&#x5404;&#x7A2E;&#x4E0D;&#x540C;&#x7684;&#x6A94;&#x6848;(&#x5982;: &#x5F71;&#x50CF;&#x3001;&#x5F71;&#x97F3;&#x3001;CSV &#x6A94;&#x3001;log &#x6A94;&#x2026;); <strong>Object</strong> &#x5247;&#x985E;&#x4F3C;&#x90A3;&#x4E9B;&#x6A94;&#x6848;&#xFF0C;&#x88AB;&#x653E;&#x5165;&#x8CC7;&#x6599;&#x593E;&#x4E2D;&#x3002;&#x6B64;&#x5916;&#xFF0C;<strong>Bucket</strong> &#x5728; S3 &#x4E2D;&#x9084;&#x6709;&#x5176;&#x4ED6;&#x4E0D;&#x540C;&#x7684;&#x529F;&#x7528;&#xFF0C;&#x4F8B;&#x5982;: &#x64C1;&#x6709;&#x81EA;&#x5DF1;&#x7684;&#x6B0A;&#x9650;&#x5236;&#x5B9A;&#x7B56;&#x7565;(bucket policy)&#x3001;&#x53EF;&#x4EE5;&#x5145;&#x7576;&#x975C;&#x614B;&#x7DB2;&#x7AD9;&#x7684;&#x8CC7;&#x6599;&#x593E;&#x3001;&#x7522;&#x751F;&#x81EA;&#x8EAB;&#x6D3B;&#x52D5;&#x7684;&#x65E5;&#x8A8C;(log)&#x4E26;&#x653E;&#x5165;&#x5230;&#x5176;&#x4ED6;&#x7684; <strong>Bucket</strong> &#x7B49;&#x64CD;&#x4F5C;&#x3002;&#x4E0B;&#x8868;&#x5217;&#x51FA;&#x4E86; <strong>Bucket</strong> &#x548C; <strong>Object</strong> &#x4E4B;&#x9593;&#x7684;&#x4E00;&#x4E9B;&#x5DEE;&#x7570;:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Bucket</th>
+<th>Object</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&#x540D;&#x7A31;</td>
+<td><strong>Bucket</strong> &#x7684;&#x540D;&#x7A31;&#x7A31;&#x70BA; name</td>
+<td><strong>Object</strong> &#x7684;&#x540D;&#x7A31;&#x7A31;&#x70BA; key</td>
+</tr>
+<tr>
+<td>&#x578B;&#x614B;</td>
+<td>name &#x662F;&#x4E00;&#x500B;&#x5B57;&#x4E32;</td>
+<td>key &#x662F; <strong>Bucket</strong> &#x5E95;&#x4E0B;&#x7684;&#x7684;&#x8DEF;&#x5F91;</td>
+</tr>
+<tr>
+<td>&#x552F;&#x4E00;&#x6027;(Unique)</td>
+<td>&#x6709;&#x552F;&#x4E00;&#x7684; name</td>
+<td>&#x6709;&#x552F;&#x4E00;&#x7684; key</td>
+</tr>
+<tr>
+<td>&#x6578;&#x91CF;</td>
+<td>&#x4E00;&#x500B; <strong>Bucket</strong> &#x53EF;&#x4EE5;&#x5305;&#x542B;&#x8A31;&#x591A; <strong>Object</strong></td>
+<td>&#x4E00;&#x500B; <strong>Object</strong> &#x53EA;&#x5728;&#x4E00;&#x500B; <strong>Bucket</strong> &#x88E1;</td>
+</tr>
+</tbody></table>
+<p>&#xA0;</p>
+<p>&#x521D;&#x6B65;&#x8A8D;&#x8B58; <strong>Bucket</strong> &#x548C; <strong>Object</strong> &#x7684;&#x6982;&#x5FF5;&#x5F8C;&#xFF0C;&#x6211;&#x5011;&#x4F86;&#x5BE6;&#x969B;&#x64CD;&#x4F5C;&#x5B83;&#x5011;&#x3002; <strong>Bucket</strong> &#x4E3B;&#x8981;&#x6709;&#x4E09;&#x500B;&#x64CD;&#x4F5C;: &#x5EFA;&#x7ACB; <strong>Bucket</strong>&#x3001;&#x5217;&#x51FA;&#x5E33;&#x6236;&#x4E2D;&#x6240;&#x6709;&#x7684; <strong>Bucket</strong> &#x548C;&#x522A;&#x9664; <strong>Bucket</strong>&#x3002;&#x4EE5;&#x4E0B;&#x5C07;&#x5404;&#x5225;&#x5217;&#x51FA;:</p>
+<ul>
+<li>&#x5EFA;&#x7ACB; <strong>Bucket</strong></li>
+</ul>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bucket_response = s3.create_bucket(Bucket=&apos;Weather&apos;)</span><br></pre></td></tr></tbody></table></figure>
+
+<ul>
+<li>&#x5217;&#x51FA;&#x6240;&#x6709;&#x7684; <strong>Bucket</strong></li>
+</ul>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">bucket_response = s3.list_buckets()</span><br><span class="line"></span><br><span class="line"># &#x53D6;&#x51FA; Bucket &#x5B57;&#x5178;(&#x88E1;&#x9762;&#x542B;&#x6709; Bucket &#x7684;&#x540D;&#x7A31;&#x53CA;&#x5176;&#x6240;&#x5EFA;&#x7ACB;&#x7684;&#x6642;&#x9593;)</span><br><span class="line">bucket_lists = bucket_response[&apos;Buckets&apos;]</span><br><span class="line"></span><br><span class="line"># &#x53D6;&#x51FA;&#x6240;&#x6709; Bucket &#x7684;&#x540D;&#x7A31;</span><br><span class="line">for bucket in bucket_response[&apos;Buckets&apos;]:</span><br><span class="line">    print(bucket[&apos;Name&apos;])</span><br></pre></td></tr></tbody></table></figure>
+
+<ul>
+<li>&#x522A;&#x9664; <strong>Bucket</strong></li>
+</ul>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bucket_response = s3.delete_bucket(&apos;Weather&apos;)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x5176;&#x4E2D;&#xFF0C;&#x53C3;&#x6578; Weather &#x70BA; <strong>Bucket</strong> &#x7684;&#x540D;&#x7A31;&#x3002;&#x6211;&#x5011;&#x53EF;&#x4EE5;&#x5728; AWS S3 Buckets &#x7684;&#x4E3B;&#x63A7;&#x53F0;&#x67E5;&#x770B;&#x5DF2;&#x5EFA;&#x7ACB;&#x597D;&#x7684; <strong>Bucket</strong> &#x3002;</p>
+<p>&#x63A5;&#x4E0B;&#x4F86;&#x63DB; <strong>Object</strong> &#x7684;&#x64CD;&#x4F5C;&#x3002;&#x9019;&#x4E00;&#x90E8;&#x4EFD;&#x5305;&#x542B;&#x4E0A;&#x50B3;&#x6A94;&#x6848;&#x3001;&#x4E0B;&#x8F09;&#x6A94;&#x6848;&#x3001;&#x53D6;&#x51FA; <strong>Bucket</strong> &#x88E1;&#x9762;&#x7684; <strong>Object</strong> &#x548C;&#x522A;&#x9664; <strong>Object</strong>&#x3002;&#x9019;&#x88E1;&#x8981;&#x6CE8;&#x610F;&#x7684;&#x7684;&#x662F;: &#x4E0A;&#x50B3;&#x8207;&#x4E0B;&#x8F09;&#x6A94;&#x6848;&#x7684;&#x6642;&#x5019;&#xFF0C;&#x9664;&#x4E86;&#x8F38;&#x5165;&#x8981;&#x5B58;&#x653E;&#x6A94;&#x6848;&#x7684; <strong>Bucket</strong> &#x540D;&#x7A31;&#xFF0C;&#x6A94;&#x6848;&#x540D;&#x7A31; Filename &#x548C; <strong>Object</strong> &#x7684;&#x540D;&#x7A31; key &#x4E5F;&#x8981;&#x8F38;&#x5165;&#x3002;&#x53E6;&#x5916;&#xFF0C;&#x53D6;&#x51FA; <strong>Bucket</strong> &#x88E1;&#x9762;&#x7684; <strong>Object</strong> &#x6642;&#xFF0C;&#x53EF;&#x4EE5;&#x85C9;&#x7531;&#x4E0D;&#x540C;&#x7684;&#x53C3;&#x6578;&#x8A2D;&#x5B9A;&#x53D6;&#x51FA;&#x7279;&#x5B9A;&#x7684; <strong>Object</strong>&#x3002;<code>MaxKeys=2</code> &#x8868;&#x793A;&#x53EA;&#x53D6;&#x51FA;&#x524D;&#x5169;&#x500B; <strong>Object</strong> &#xFF0C;&#x6C92;&#x6709;&#x8A2D;&#x5B9A;&#x53C3;&#x6578;&#x7684;&#x8A71;&#xFF0C;&#x9810;&#x8A2D;&#x503C;&#x662F; 1000 &#x500B;; <code>Prefix</code> &#x5247;&#x662F;&#x53D6;&#x51FA;&#x6709;&#x7279;&#x5B9A;&#x5B57;&#x9996;&#x540D;&#x7A31;&#x7684; <strong>Object</strong> &#x3002;</p>
+<ul>
+<li>&#x4E0A;&#x50B3;&#x6A94;&#x6848;</li>
+</ul>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">s3.upload_file(Filename=&apos;Weather_2020_01_01.csv&apos;,</span><br><span class="line">               Bucket=&apos;Weather&apos;,</span><br><span class="line">               Key=&apos;Weather_2020_01_01.csv&apos;)</span><br></pre></td></tr></tbody></table></figure>
+
+<ul>
+<li>&#x4E0B;&#x8F09;&#x6A94;&#x6848;</li>
+</ul>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">s3.download_file(Filename=&apos;Weather_download.csv&apos;,</span><br><span class="line">                 Bucket=&apos;Weather&apos;,</span><br><span class="line">                 Key=&apos;Weather_2020_01_01.csv&apos;)</span><br></pre></td></tr></tbody></table></figure>
+
+<ul>
+<li>&#x53D6;&#x51FA; <strong>Bucket</strong> &#x88E1;&#x9762;&#x7684; <strong>Object</strong></li>
+</ul>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"># &#x53D6;&#x51FA; Bucket &#x88E1;&#x9762;&#x7279;&#x5B9A;&#x7684; Object</span><br><span class="line"># response &#x662F;&#x4E00;&#x500B; Content dictionary</span><br><span class="line">response = s3.list_objects(Bucket=&apos;Weather&apos;,</span><br><span class="line">                           MaxKeys=2,</span><br><span class="line">                           Prefix=&apos;Weather_2020_&apos;)</span><br><span class="line"></span><br><span class="line"># &#x53D6;&#x51FA; Bucket &#x88E1;&#x9762;&#x7684;&#x7B2C;&#x4E00;&#x500B; Object</span><br><span class="line"># response &#x5167;&#x542B; object metadata</span><br><span class="line">response = s3.head_object(Bucket=&apos;Weather&apos;,</span><br><span class="line">                          Key=&apos;Weather_2020_01_01.csv&apos;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># &#x4F7F;&#x7528; .get_object() &#x7684;&#x65B9;&#x6CD5;&#xFF0C;&#x8CC7;&#x6599;&#x4EE5; StreamingBody &#x7684; response &#x578B;&#x614B;&#x5132;&#x5B58;&#x5728;&#x5B57;&#x5178; body &#x88E1;</span><br><span class="line">response = s3.get_object(Bucket=&apos;Weather&apos;, Key=&apos;Weather_2020_01_01.csv&apos;)</span><br><span class="line"># &#x8B80;&#x53D6; StreamingBody &#x5230; Pandas</span><br><span class="line">pd.read_csv(response[&apos;Body&apos;])</span><br></pre></td></tr></tbody></table></figure>
+
+<ul>
+<li>&#x522A;&#x9664; <strong>Object</strong></li>
+</ul>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s3.delete_object(Bucket=&apos;Weather&apos;,</span><br><span class="line">                 Key=&apos;Weather_2020_01_01.csv&apos;)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x4EE5;&#x4E0A;&#x5C31;&#x662F; <strong>Bucket</strong> &#x548C; <strong>Object</strong> &#x7684;&#x57FA;&#x672C;&#x64CD;&#x4F5C;&#x3002;&#x4F46;&#x4F60;&#x53EF;&#x80FD;&#x6703;&#x60F3;&#x5230;: &#x8981;&#x600E;&#x9EBC;&#x6A23;&#x628A;&#x4E00;&#x4EFD;&#x6A94;&#x6848;&#x516C;&#x958B;&#x7D66;&#x4EFB;&#x4F55;&#x4EBA;&#x4F7F;&#x7528;&#xFF0C;&#x4E14;&#x4F7F;&#x7528;&#x6A94;&#x6848;&#x7684;&#x4EBA;&#x4E0D;&#x9808;&#x64C1;&#x6709; S3 &#x670D;&#x52D9;&#x7684;&#x5B58;&#x53D6;&#x6B0A;&#x9650; ? &#x56E0;&#x70BA;&#x4E0A;&#x50B3;&#x6A94;&#x6848;&#x5F8C;&#xFF0C;&#x53EA;&#x6709;&#x5728; S3 &#x670D;&#x52D9;&#x88E1;&#x7684;&#x4F7F;&#x7528;&#x8005;&#x4EAB;&#x6709; IAM AmazonS3FullAccess &#x63D0;&#x4F9B;&#x7684;&#x5B58;&#x53D6;&#x6B0A;(&#x524D;&#x6587;&#x7684;&#x8A2D;&#x5B9A;)&#xFF0C;&#x975E; IAM &#x6240;&#x5EFA;&#x7ACB;&#x7684;&#x4F7F;&#x7528;&#x8005;&#x7121;&#x6CD5;&#x4F7F;&#x7528;&#x6A94;&#x6848;&#x3002;&#x55EF;&#xFF0C;&#x8A72;&#x662F;&#x9032;&#x4E00;&#x6B65;&#x6DF1;&#x5165;&#x4E86;&#x89E3; AWS permission system &#x7684;&#x6642;&#x5019;&#x4E86;!<br>&#xA0;</p>
+<h4 id="&#x6A94;&#x6848;&#x7684;&#x6B0A;&#x9650;&#x8A2D;&#x5B9A;"><a href="#&#x6A94;&#x6848;&#x7684;&#x6B0A;&#x9650;&#x8A2D;&#x5B9A;" class="headerlink" title="&#x6A94;&#x6848;&#x7684;&#x6B0A;&#x9650;&#x8A2D;&#x5B9A;"></a><strong>&#x6A94;&#x6848;&#x7684;&#x6B0A;&#x9650;&#x8A2D;&#x5B9A;</strong></h4><p>&#x4E00;&#x822C;&#x800C;&#x8A00;&#xFF0C;&#x6211;&#x5011;&#x901A;&#x5E38;&#x6703;&#x628A;&#x79C1;&#x5BC6;&#x7684;&#x8CC7;&#x6599;&#x50C5;&#x4F9B;&#x7279;&#x5B9A;&#x7684;&#x4F7F;&#x7528;&#x8005;&#x4F7F;&#x7528;&#x3002;&#x60F3;&#x8981;&#x8CC7;&#x6599;&#x7684;&#x5176;&#x4ED6;&#x4F7F;&#x7528;&#x8005;&#xFF0C;&#x5FC5;&#x9808;&#x5F9E;&#x5E33;&#x6236;&#x7BA1;&#x7406;&#x8005;&#x62FF;&#x5230;&#x5BC6;&#x78BC;&#x624D;&#x80FD;&#x5B58;&#x53D6;&#x8CC7;&#x6599;&#x3002;&#x7528; pandas &#x76F4;&#x63A5;&#x4E0B;&#x8F09; S3 &#x7684;&#x6A94;&#x6848;&#x70BA;&#x4F8B;&#xFF0C;</p>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">df = pd.read_csv(&apos;https://Weather.s3.amazonaws.com/Weather_2020_01_01.csv&apos;)</span><br><span class="line">df</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x4F60;&#x6703;&#x770B;&#x5230;&#x4E0B;&#x5217;&#x7684;&#x8F38;&#x51FA;:</p>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HTTPError: HTTP Error 403: Forbidden</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x9019;&#x61C9;&#x8A72;&#x5728;&#x4F60;&#x9810;&#x671F;&#x5730;&#x72C0;&#x6CC1;&#x5167;&#x3002;&#x6C92;&#x932F;&#xFF0C;&#x6211;&#x5011;&#x9700;&#x8981;&#x5982;&#x540C;&#x5148;&#x524D;&#x7684;&#x64CD;&#x4F5C;&#xFF0C;&#x4E0B;&#x8F09;&#x6A94;&#x6848;&#x524D;&#x5148;&#x555F;&#x52D5; client &#x7AEF;&#xFF0C;&#x8F38;&#x5165;&#x5E33;&#x6236;&#x7BA1;&#x7406;&#x8005;&#x7D66;&#x4F7F;&#x7528;&#x8005;&#x7684; access_key_id &#x548C; secret_access_key &#x624D;&#x80FD;&#x4E0B;&#x8F09;&#x6A94;&#x6848;&#x3002;&#x9019;&#x5C31;&#x662F; AWS permission system &#x9810;&#x8A2D;&#x7684;&#x5426;&#x8A8D;&#x5141;&#x8A31;(denying permission)&#x3002;&#x8CC7;&#x6599;&#x662F;&#x79C1;&#x5BC6;&#x7684;(private)&#xFF0C;&#x76F4;&#x63A5;&#x7528;&#x6A94;&#x6848;&#x7684; URL &#x4E0B;&#x8F09;&#x6703;&#x88AB;&#x7981;&#x6B62;&#x3002;&#x56E0;&#x6B64;&#xFF0C;&#x4F60;&#x5FC5;&#x9808;&#x8981;&#x6709; access_key_id &#x548C; secret_access_key&#xFF0C;&#x5C0D;&#x6A94;&#x6848;&#x624D;&#x6709;&#x5B58;&#x53D6;&#x6B0A;&#x3002;&#x9019;&#x6A23;&#x7684;&#x904B;&#x4F5C;&#x65B9;&#x5F0F;&#x63D0;&#x4F9B;&#x4E86;&#x8CC7;&#x6599;&#x4E00;&#x5C64;&#x7684;&#x4FDD;&#x8B77;&#x3002;</p>
+<p>AWS permission system &#x6709;&#x56DB;&#x7A2E;&#x63A7;&#x5236;&#x4F7F;&#x7528;&#x8005;&#x6B0A;&#x9650;&#x7684;&#x65B9;&#x6CD5;&#xFF0C;&#x5F9E;&#x8CC7;&#x6599;&#x7684;&#x7BC4;&#x570D;&#x5927;&#x5230;&#x5C0F;&#x5206;&#x5225;&#x70BA; IAM&#x3001;Bucket Policy&#x3001;Access Control Lists (ACL) &#x548C; Presigned URL&#x3002;&#x524D;&#x9762;&#x63D0;&#x904E;&#x7684; IAM &#x6703;&#x7D66;&#x4E88;&#x4F7F;&#x7528;&#x8005;&#x7279;&#x5B9A;&#x670D;&#x52D9;&#x7684;&#x4F7F;&#x7528;&#x6B0A;; Bucket Policy &#x5247;&#x7D66;&#x4E88;&#x4F7F;&#x7528;&#x8005; <strong>Bucket</strong> &#x53CA;&#x5176; <strong>Object</strong> &#x7684;&#x5B58;&#x53D6;&#x6B0A;; Access Control Lists (ACL) &#x6703;&#x91DD;&#x5C0D; <strong>Bucket</strong> &#x88E1;&#x9762;&#x7279;&#x5B9A;&#x7684; <strong>Object</strong> &#x8A2D;&#x5B9A;&#x6B0A;&#x9650;&#x3002;ACL &#x5206;&#x6210;&#x5169;&#x7A2E;&#x6A21;&#x5F0F;: <code>private</code> &#x548C; <code>public-read</code>&#x3002;<code>private</code>&#x662F; ACL &#x7684;&#x9810;&#x8A2D;&#x6A21;&#x5F0F;&#x3002;&#x5728; <code>private</code> &#x6A21;&#x5F0F;&#x6642;&#xFF0C;&#x4E00;&#x822C;&#x4EBA;&#x7121; <strong>Object</strong> &#x7684;&#x5B58;&#x53D6;&#x6B0A;&#x3002;&#x8981;&#x4F7F;&#x7528; <strong>Object</strong> &#x9808;&#x900F;&#x904E; IAM &#x63D0;&#x4F9B;&#x7684; access_key_id &#x548C; secret_access_key &#x3002;&#x7136;&#x800C;&#xFF0C;&#x5728; <code>public-read</code> &#x6A21;&#x5F0F;&#x4E0B;&#xFF0C;&#x4EFB;&#x4F55;&#x4EBA;&#x90FD;&#x53EF;&#x4EE5;&#x4F7F;&#x7528; <strong>Object</strong> &#x3002; </p>
+<p>&#x6211;&#x5011;&#x518D;&#x7528;&#x4E00;&#x6B21;&#x4E0B;&#x8F09; S3 &#x7684;&#x6A94;&#x6848;&#x7576;&#x4F5C;&#x7BC4;&#x4F8B;:</p>
+<ol>
+<li>&#x521D;&#x59CB;&#x5316; <code>client</code> &#x7AEF;&#x5F8C;&#xFF0C;&#x4E0A;&#x50B3;&#x6A94;&#x6848;</li>
+</ol>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">import boto3</span><br><span class="line"></span><br><span class="line">s3 = boto3.client(&apos;s3&apos;,</span><br><span class="line">                  region_name=&apos;us-east-1&apos;,</span><br><span class="line">                  aws_access_key_id=AWS_KEY_ID,</span><br><span class="line">                  aws_secret_access_key=AWS_SECRET)</span><br><span class="line"></span><br><span class="line">s3.upload_file(Filename=&apos;Weather_2020_01_01.csv&apos;,</span><br><span class="line">               Bucket=&apos;Weather&apos;,</span><br><span class="line">               Key=&apos;Weather_2020_01_01.csv&apos;)</span><br></pre></td></tr></tbody></table></figure>
+
+<ol start="2">
+<li>&#x5C07; <strong>Object</strong> &#x7684; ACL &#x8A2D;&#x5B9A;&#x70BA; <code>public-read</code> </li>
+</ol>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">s3.put_object_acl(Bucket=&apos;Weather&apos;,</span><br><span class="line">                  Key=&apos;Weather_2020_01_01.csv&apos;,</span><br><span class="line">                  ACL=&apos;public-read&apos;)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x53E6;&#x5916;&#xFF0C;&#x4F60;&#x4E5F;&#x53EF;&#x4EE5;&#x5728;&#x4E0A;&#x50B3;&#x6A94;&#x6848;&#x6642;&#x76F4;&#x63A5;&#x8A2D;&#x5B9A; ACL &#x70BA; <code>public-read</code>:</p>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">s3.upload_file(Bucket=&apos;Weather&apos;,</span><br><span class="line">               Filename=&apos;Weather_2020_01_01.csv&apos;,</span><br><span class="line">               Key=&apos;Weather_2020_01_01.csv&apos;,</span><br><span class="line">               ExtraArgs={&apos;ACL&apos;:&apos;public-read&apos;})</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x5B8C;&#x6210;&#x5F8C;&#xFF0C;<strong>Object</strong> &#x8B8A;&#x6210; <code>public-read</code> &#xFF0C;&#x9019;&#x6A23;&#x4E00;&#x4F86;&#x4FBF;&#x53EF;&#x76F4;&#x63A5;&#x7528; <strong>Object</strong> &#x7684; URL &#x6210;&#x529F;&#x8B80;&#x53D6;&#x6A94;&#x6848;&#x3002;&#x9806;&#x5E36;&#x4E00;&#x63D0;&#xFF0C;<strong>Object</strong> &#x7684; URL &#x683C;&#x5F0F;&#x70BA; <code>https://{bucket}.s3.amazonaws.com/{key}</code> &#x3002;</p>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">url = &quot;https://{}.s3.amazonaws.com/{}&quot;.format(&quot;Weather&quot;, &quot;Weather_2020_01_01.csv&quot;)</span><br><span class="line">df = pd.read_csv(url) </span><br><span class="line"># access!</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x6709;&#x4E86; ACL &#x7684;&#x6B0A;&#x9650;&#x8A2D;&#x5B9A;&#x65B9;&#x6CD5;&#xFF0C;&#x5C31;&#x53EF;&#x4EE5;&#x56DE;&#x7B54;&#x4E0A;&#x9762;&#x63D0;&#x5230;&#x7684;&#x554F;&#x984C;: &#x5982;&#x4F55;&#x628A;&#x4E00;&#x4EFD;&#x6A94;&#x6848;&#x516C;&#x958B;&#x7D66;&#x4EFB;&#x4F55;&#x4EBA;&#x4F7F;&#x7528;&#xFF0C;&#x4E14;&#x4F7F;&#x7528;&#x6A94;&#x6848;&#x7684;&#x4EBA;&#x4E0D;&#x9808;&#x64C1;&#x6709; S3 &#x670D;&#x52D9;&#x7684;&#x5B58;&#x53D6;&#x6B0A;&#x9650; ? &#x6211;&#x5011;&#x53EA;&#x8981;&#x900F;&#x904E;&#x4E00;&#x500B;&#x53C3;&#x6578;&#x8A2D;&#x5B9A;&#x7684;&#x6B65;&#x9A5F;&#x5C31;&#x884C;&#x4E86; ! &#x5982;&#x6B64;&#x4E00;&#x4F86;&#xFF0C;&#x82E5;&#x8981;&#x7D66;&#x4E00;&#x822C;&#x4EBA;&#x4E0B;&#x8F09;&#x6A94;&#x6848;&#xFF0C;&#x5C07; <strong>Object</strong> &#x4FDD;&#x6301; <code>public-read</code> &#x7684;&#x72C0;&#x614B;&#x5373;&#x53EF;&#x3002; <strong>Object</strong> &#x53C3;&#x6578;&#x70BA; <code>private</code> &#x6216;&#x6C92;&#x6709;&#x8A2D;&#x5B9A;&#xFF0C;&#x5C31;&#x662F;&#x9075;&#x5B88; AWS permission system &#x9810;&#x8A2D;&#x7684;&#x5426;&#x8A8D;&#x5141;&#x8A31;(denying permission)&#xFF0C;&#x4F7F;&#x7528;&#x6A94;&#x6848;&#x8981;&#x7D93;&#x904E; IAM &#x898F;&#x7BC4;&#x63D0;&#x4F9B;&#x7684; access_key_id &#x548C; secret_access_key&#x3002;</p>
+<p>&#x6240;&#x4EE5;&#xFF0C;&#x6B0A;&#x9650;&#x6AA2;&#x67E5;&#x5927;&#x81F4;&#x7684;&#x6D41;&#x7A0B;&#x5982;&#x4E0B;:</p>
+<p>$$ &#x6A94;&#x6848;&#x8ACB;&#x6C42;&#x8005;(requester)\ \rightarrow ACL\ &#x7684;&#x898F;&#x7BC4;&#x662F;&#x5426;&#x5141;&#x8A31; ? $$</p>
+<ul>
+<li><p>&#x662F; $\rightarrow$ &#x4E0B;&#x8F09;</p>
+</li>
+<li><p>&#x5426; $\rightarrow$ &#x7981;&#x6B62;&#x4E0B;&#x8F09;&#xFF0C;&#x6AA2;&#x67E5; AWS permission system &#x7684;&#x5176;&#x4ED6;&#x898F;&#x7BC4;&#x662F;&#x5426;&#x5141;&#x8A31;(IAM&#x3001;bucket policy)?</p>
+</li>
+</ul>
+<p>&#x5927;&#x529F;&#x544A;&#x6210; !</p>
+<p>&#x7B49;&#x7B49;&#xFF0C;&#x9084;&#x6709;&#x4E00;&#x7A2E;&#x8981;&#x8003;&#x616E;&#x7684;&#x60C5;&#x6CC1;&#x3002;</p>
+<p>&#x5982;&#x679C;&#x6211;&#x5011;&#x60F3;&#x8B93; <strong>Object</strong> &#x4E00;&#x76F4;&#x7DAD;&#x6301; <code>private</code> &#xFF0C;&#x8981;&#x4E0B;&#x8F09;&#x6A94;&#x6848;&#x6642; <strong>Object</strong> &#x8B8A;&#x6210;&#x6709;&#x6642;&#x6548;&#x6027;&#x7684; <code>public-read</code> &#xFF0C; &#x904E;&#x4E86;&#x9019;&#x6BB5;&#x6642;&#x6548;&#x518D;&#x8B8A;&#x56DE; <code>private</code> &#x3002; &#x63DB;&#x53E5;&#x8A71;&#x8AAA;&#xFF0C;&#x6709;&#x6C92;&#x6709;&#x8FA6;&#x6CD5;&#x5728;&#x4E00;&#x6BB5;&#x6642;&#x9593;&#x9593;&#x9694;&#x88E1;&#xFF0C;&#x4EFB;&#x4F55;&#x4EBA;&#x90FD;&#x53EF;&#x4EE5;&#x96A8;&#x610F;&#x7684;&#x4E0B;&#x8F09;&#x6A94;&#x6848;&#xFF0C;&#x6642;&#x9593;&#x904E;&#x4E86;&#x5C31;&#x7121;&#x6CD5;&#x4F7F;&#x7528; ? &#x6709;&#xFF0C;&#x90A3;&#x5C31;&#x662F;&#x4E0A;&#x9762;&#x63D0;&#x5230; AWS permission system &#x7684;&#x6700;&#x5F8C;&#x4E00;&#x500B;&#x65B9;&#x6CD5;: Presigned URL&#x3002; Presigned URL &#x63D0;&#x4F9B;&#x6211;&#x5011;&#x4E00;&#x500B;&#x79C1;&#x5BC6;&#x8CC7;&#x6599;&#x7684;&#x9023;&#x7D50;&#xFF0C;&#x9019;&#x500B;&#x9023;&#x7D50;&#x6703;&#x5728;&#x9650;&#x5B9A;&#x7684;&#x6642;&#x9593;&#x5167;&#x6709;&#x6548;&#x3002; &#x7528;&#x9019;&#x7A2E;&#x65B9;&#x5F0F;&#x53EF;&#x4EE5;&#x5F48;&#x6027;&#x5730;&#x78BA;&#x4FDD;&#x8CC7;&#x6599;&#x7684;&#x96B1;&#x5BC6;&#x6027;&#x3002;</p>
+<p>&#x4F86;&#x770B;&#x770B;&#x4E00;&#x6A23;&#x4E0B;&#x8F09;&#x6A94;&#x6848;&#x7684;&#x6D41;&#x7A0B;&#xFF0C;&#x8981;&#x5982;&#x4F55;&#x4F7F;&#x7528; Presigned URL &#x5427; ! </p>
+<ol>
+<li>&#x521D;&#x59CB;&#x5316; <code>client</code> &#x7AEF;&#x5F8C;&#xFF0C;&#x4E0A;&#x50B3;&#x6A94;&#x6848;</li>
+</ol>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">import boto3</span><br><span class="line"></span><br><span class="line">s3 = boto3.client(&apos;s3&apos;,</span><br><span class="line">                  region_name=&apos;us-east-1&apos;,</span><br><span class="line">                  aws_access_key_id=AWS_KEY_ID,</span><br><span class="line">                  aws_secret_access_key=AWS_SECRET)</span><br><span class="line"></span><br><span class="line">s3.upload_file(Filename=&apos;Weather_2020_01_01.csv&apos;,</span><br><span class="line">               Bucket=&apos;Weather&apos;,</span><br><span class="line">               Key=&apos;Weather_2020_01_01.csv&apos;)</span><br></pre></td></tr></tbody></table></figure>
+
+<ol start="2">
+<li>&#x751F;&#x6210; Presigned URL (&#x53C3;&#x6578; ExpiresIn &#x7528;&#x4F86;&#x8A2D;&#x5B9A;&#x6642;&#x9593;&#x9593;&#x9694;&#x7684;&#x9577;&#x5EA6;&#xFF0C;&#x4EE5;&#x79D2;&#x70BA;&#x55AE;&#x4F4D;)</li>
+</ol>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">share_url = s3.generate_presigned_url(ClientMethod=&apos;get_object&apos;,</span><br><span class="line">                                      ExpiresIn=3600,</span><br><span class="line">                                      Params={&apos;Bucket&apos;: &apos;Weather&apos;,</span><br><span class="line">                                              &apos;Key&apos;: &apos;Weather_2020_01_01.csv&apos;})</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x5982;&#x6B64;&#x4E00;&#x4F86;&#xFF0C;&#x4EFB;&#x4F55;&#x4EBA;&#x90FD;&#x53EF;&#x4EE5;&#x5728;&#x6709;&#x6548;&#x7684;&#x6642;&#x9593;&#x5167;&#xFF0C;&#x900F;&#x904E;&#x5171;&#x4EAB;&#x7684;&#x9023;&#x7D50; share_url &#x8B80;&#x53D6;&#x6A94;&#x6848;&#x5167;&#x5BB9;&#x3002;</p>
+<figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pd.read_csv(share_url)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x6B0A;&#x9650;&#x6AA2;&#x67E5;&#x6D41;&#x7A0B;&#x65B9;&#x9762;&#xFF0C;&#x52A0;&#x5165; Presigned URL &#x5F8C;&#x8B8A;&#x6210;: </p>
+<p>$$ &#x6A94;&#x6848;&#x8ACB;&#x6C42;&#x8005;(requester)&#x5148;&#x6AA2;&#x67E5;&#x6709;&#x6C92;&#x6709;\ Presigned\ URL ?$$</p>
+<ul>
+<li><p>&#x6709; $\rightarrow$ &#x6709;&#x6548;&#x671F;&#x9650;&#x5167;&#x4E0B;&#x8F09;&#x6A94;&#x6848;</p>
+</li>
+<li><p>&#x6C92;&#x6709; $\rightarrow$ ACL &#x7684;&#x898F;&#x7BC4;&#x70BA; <code>public</code> &#x6216; <code>private</code> ?</p>
+<ul>
+<li><p><code>public-read</code> $\rightarrow$ &#x4E0B;&#x8F09;&#x6A94;&#x6848;</p>
+</li>
+<li><p><code>private</code> $\rightarrow$ &#x7981;&#x6B62;&#x4E0B;&#x8F09;&#xFF0C;&#x6AA2;&#x67E5; AWS permission system &#x7684;&#x5176;&#x4ED6;&#x898F;&#x7BC4;&#x662F;&#x5426;&#x5141;&#x8A31;(IAM&#x3001;bucket policy)?</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>&#x6700;&#x5F8C;&#xFF0C;&#x6211;&#x5011;&#x7528;&#x4E0B;&#x8868;&#x5C07;&#x4E0A;&#x8FF0; AWS permission system &#x4E2D;&#x7684; IAM&#x3001;Bucket Policy&#x3001;Access Control Lists (ACL) &#x548C; Presigned URL &#x505A;&#x6574;&#x7406;&#xFF0C;&#x4EE5;&#x4FBF;&#x66F4;&#x6E05;&#x695A;&#x5730;&#x77AD;&#x89E3;&#x5404;&#x500B;&#x898F;&#x7BC4;&#x65B9;&#x6CD5;&#x7684;&#x6B0A;&#x9650;&#x63A7;&#x5236;&#x7BC4;&#x570D;&#x3002;</p>
+<table>
+<thead>
+<tr>
+<th>&#x65B9;&#x6CD5;</th>
+<th>&#x6B0A;&#x9650;&#x7BC4;&#x570D;</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IAM</td>
+<td>AWS services, buckets &#x548C; objects</td>
+</tr>
+<tr>
+<td>Bucket policy</td>
+<td>buckets &#x548C; objects</td>
+</tr>
+<tr>
+<td>Access Control Lists (ACL)</td>
+<td>objects</td>
+</tr>
+<tr>
+<td>Presigned URL</td>
+<td>&#x81E8;&#x6642;&#x5B58;&#x53D6; objects</td>
+</tr>
+</tbody></table>
+<p>&#xA0;</p>
+<h4 id="&#x5C0F;&#x7D50;"><a href="#&#x5C0F;&#x7D50;" class="headerlink" title="&#x5C0F;&#x7D50;"></a><strong>&#x5C0F;&#x7D50;</strong></h4><p>&#x5728;&#x672C;&#x7BC7;&#x6587;&#x7AE0;&#x7D50;&#x675F;&#x524D;&#xFF0C;&#x8B93;&#x6211;&#x5011;&#x56DE;&#x9867;&#x4E00;&#x4E0B;&#x524D;&#x6587;&#xFF0C;&#x5217;&#x8209;&#x4EE5;&#x4E0B;&#x5E7E;&#x500B;&#x7684;&#x8981;&#x9EDE;&#x3002; &#x76F8;&#x4FE1;&#x60A8;&#x5DF2;&#x7D93;&#x5C0D; AWS S3 &#x7684;&#x57FA;&#x790E;&#x6709;&#x6240;&#x4E86;&#x89E3;&#x3002;</p>
+<ul>
+<li>AWS &#x662F;&#x4E00;&#x500B;&#x96F2;&#x7AEF;&#x61C9;&#x7528;&#x5E73;&#x53F0;&#xFF0C;&#x5B83;&#x63D0;&#x4F9B;&#x4E86;&#x8A31;&#x591A;&#x76F8;&#x95DC;&#x7684;&#x670D;&#x52D9;&#xFF0C;&#x5982;: S3&#x3001;SNS&#x3001;Comprehend&#x3001;Rekognition&#x3001;RDS&#x3001;Lambda&#x3001;EC2&#x2026;</li>
+</ul>
+<ul>
+<li>&#x6211;&#x5011;&#x53EF;&#x900F;&#x904E; Python &#x7684; <code>boto3</code> &#x5957;&#x4EF6;&#x9023;&#x7D50; AWS &#x7684;&#x670D;&#x52D9;&#x4E26;&#x5F9E; AWS &#x7684;&#x4E3B;&#x63A7;&#x53F0;&#x5229;&#x7528; IAM &#x5EFA;&#x7ACB;&#x3001;&#x7BA1;&#x7406;&#x4F7F;&#x7528;&#x8005;&#x3002;</li>
+</ul>
+<ul>
+<li>AWS S3 &#x96F2;&#x7AEF;&#x5132;&#x5B58;&#x7684;&#x7D44;&#x6210;&#x8981;&#x4EF6;&#x70BA; bucket &#x548C; object&#xFF0C; &#x6211;&#x5011;&#x53EF;&#x4EE5;&#x5229;&#x7528;&#x5B83;&#x5011;&#x9032;&#x884C;&#x6A94;&#x6848;&#x7684;&#x4E0A;&#x50B3;&#x8207;&#x4E0B;&#x8F09;&#x3002;</li>
+</ul>
+<ul>
+<li>AWS permission system &#x5305;&#x542B; IAM&#x3001;Bucket Policy&#x3001;Access Control Lists (ACL) &#x548C; Presigned URL&#xFF0C; &#x5B83;&#x898F;&#x7BC4;&#x4E86;&#x4F7F;&#x7528;&#x8005;&#x4F7F;&#x7528; AWS &#x5404;&#x7A2E;&#x670D;&#x52D9;&#x7684;&#x6B0A;&#x9650;&#x3002;</li>
+</ul>
+<p>&#x4E0B;&#x4E00;&#x56DE;&#xFF0C;&#x6211;&#x5011;&#x5C07;&#x8A8D;&#x8B58;&#x53E6;&#x4E00;&#x500B; AWS &#x670D;&#x52D9; - SNS&#xFF0C;&#x5B83;&#x662F;&#x4E00;&#x500B;&#x5C08;&#x9580;&#x7528;&#x4F86;&#x5F9E;&#x96F2;&#x7AEF;&#x767C;&#x9001;&#x7C21;&#x8A0A;&#x7684;&#x7CFB;&#x7D71;&#x3002;</p>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/data-engineering/">#data engineering</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/cloud-technology/">#cloud technology</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Amazon-S3/">#Amazon S3</a></span>
+    
+    </div>
+    
+    
+</article>
+
+
+
+
+<div class="comments">
+    <h3 class="title is-4">評論</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.language = "en";
+        this.page.url = 'https://yeh8211tk.github.io/2020/06/30/AWS/';
+        this.page.identifier = '2020/06/30/AWS/';
+        //
+        //this.language = 'zh';
+        //
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'Scitraveler' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript" target="_blank" rel="noopener">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2020 C.J. Yeh&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" href="https://github.com/yeh8211TK" target="_blank" rel="noopener">
+                    
+                    <i class="fab fa-github"></i>
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/" target="_blank" rel="noopener">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+    <style>
+        .hljs {
+            position: relative;
+        }
+
+        .hljs .clipboard-btn {
+            float: right;
+            color: #9a9a9a;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .hljs .clipboard-btn:hover {
+          color: #8a8a8a;
+        }
+
+        .hljs > .clipboard-btn {
+            display: none;
+            position: absolute;
+            right: 4px;
+            top: 4px;
+        }
+
+        .hljs:hover > .clipboard-btn {
+            display: inline;
+        }
+
+        .hljs > figcaption > .clipboard-btn {
+            margin-right: 4px;
+        }
+    </style>
+    <script>
+      $(document).ready(function () {
+        $('figure.hljs').each(function(i, figure) {
+          var codeId = 'code-' + i;
+          var code = figure.querySelector('.code');
+          var copyButton = $('<button>Copy <i class="far fa-clipboard"></i></button>');
+          code.id = codeId;
+          copyButton.addClass('clipboard-btn');
+          copyButton.attr('data-clipboard-target-id', codeId);
+
+          var figcaption = figure.querySelector('figcaption');
+
+          if (figcaption) {
+            figcaption.append(copyButton[0]);
+          } else {
+            figure.prepend(copyButton[0]);
+          }
+        })
+
+        var clipboard = new ClipboardJS('.clipboard-btn', {
+          target: function(trigger) {
+            return document.getElementById(trigger.getAttribute('data-clipboard-target-id'));
+          }
+        });
+        clipboard.on('success', function(e) {
+          e.clearSelection();
+        })
+      })
+    </script>
+
+    
+    
+
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站內搜尋" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '頁面',
+                CATEGORIES: '分類',
+                TAGS: '標籤',
+                UNTITLED: '(無標題)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>
