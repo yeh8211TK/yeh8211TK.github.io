@@ -1,7 +1,7 @@
 @charset "UTF-8";
 /*"Ovo", "Georgia", "STZhongsong", DFKai-SB", "Microsoft YaHei", serif;*/
 body {
-  background-color: #efefef; }
+  background-color: #f5f8f9; }
 
 .navbar-brand {
   min-height: 3.75rem; }
@@ -13,7 +13,7 @@ body {
   font-size: 16px; }
 
 .section_block {
-  background-color: #efefef;
+  background-color: #f5f8f9;
   display: flex;
   justify-content: center;
   margin: 10px 20px; }
